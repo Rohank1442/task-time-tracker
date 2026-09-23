@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import logging
 from fastapi import APIRouter, Depends
 from app.core.config import settings
@@ -11,11 +12,13 @@ logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter(prefix="/tasks", tags=["AI Enhancement"])
 
-# List of Gemini models to try in order of preference
+# Ordered list of active Gemini models to fallback across
 GEMINI_MODELS = [
     'gemini-3.6-flash',
+    'gemini-3.7-flash',
+    'gemini-3.5-flash',
     'gemini-2.5-flash',
-    'gemini-1.5-flash',
+    'gemini-flash-latest',
 ]
 
 @router.post("/enhance", response_model=EnhanceTaskResponse)
@@ -25,15 +28,15 @@ def enhance_task(
 ):
     """
     Enhances natural language task input into a polished title and description.
-    Uses Google Gemini API if configured, trying latest supported model versions,
-    with an automatic non-blocking fallback if no valid key/model is available.
+    Uses Google Gemini API with automatic retry on 503 high demand spikes and
+    model fallbacks, with a clean non-blocking fallback if all API calls fail.
     """
     prompt_text = payload.prompt.strip()
 
-    # Check for Gemini API Key
+    # Retrieve key
     gemini_key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY")
     
-    if gemini_key and not gemini_key.startswith("your_") and len(gemini_key) > 10:
+    if gemini_key and not gemini_key.startswith("your_") and len(gemini_key) > 5:
         try:
             from google import genai
             from google.genai import types
@@ -45,33 +48,44 @@ def enhance_task(
                 "Respond ONLY with a JSON object with keys 'title' and 'description'."
             )
 
-            # Try generating content with supported models
             for model_name in GEMINI_MODELS:
-                try:
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=prompt_text,
-                        config=types.GenerateContentConfig(
-                            system_instruction=system_instruction,
-                            response_mime_type="application/json"
+                # Retry up to 2 times per model if a temporary 503 high demand spike occurs
+                for attempt in range(2):
+                    try:
+                        logger.info(f"Attempting Gemini model: {model_name} (attempt {attempt + 1})")
+                        response = client.models.generate_content(
+                            model=model_name,
+                            contents=prompt_text,
+                            config=types.GenerateContentConfig(
+                                system_instruction=system_instruction,
+                                response_mime_type="application/json"
+                            )
                         )
-                    )
 
-                    parsed = json.loads(response.text)
-                    if "title" in parsed and "description" in parsed:
-                        return EnhanceTaskResponse(
-                            title=parsed["title"].strip(),
-                            description=parsed["description"].strip(),
-                            ai_enhanced=True
-                        )
-                except Exception as model_err:
-                    logger.warning(f"Model {model_name} failed: {str(model_err)}")
-                    continue
+                        parsed = json.loads(response.text)
+                        if "title" in parsed and "description" in parsed:
+                            logger.info(f"Gemini enhancement SUCCESS with model {model_name}")
+                            return EnhanceTaskResponse(
+                                title=parsed["title"].strip(),
+                                description=parsed["description"].strip(),
+                                ai_enhanced=True
+                            )
+                    except Exception as model_err:
+                        err_str = str(model_err)
+                        logger.warning(f"Model {model_name} attempt {attempt + 1} error: {err_str}")
+                        # If 503 high demand spike, pause briefly before retrying
+                        if "503" in err_str or "UNAVAILABLE" in err_str:
+                            time.sleep(0.5)
+                            continue
+                        else:
+                            # 404 or other non-retryable error, switch to next model immediately
+                            break
 
         except Exception as e:
-            logger.warning(f"Gemini API client initialization failed: {str(e)}")
+            logger.error(f"Gemini client error: {str(e)}")
 
-    # Fallback when AI API key is not configured or call fails
+    logger.warning("Gemini enhancement failed or unavailable. Using default formatting.")
+
     cleaned_title = prompt_text.capitalize()
     fallback_desc = f"Action items and follow-up details for '{prompt_text}'."
 
