@@ -61,11 +61,11 @@ def start_timer(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Timer is already running for this task."
             )
-        active_task = db.query(Task).filter(Task.id == existing_active.task_id).first()
-        active_title = active_task.title if active_task else f"Task #{existing_active.task_id}"
+        # active_task = db.query(Task).filter(Task.id == existing_active.task_id).first()
+        # active_title = active_task.title if active_task else f"Task #{existing_active.task_id}"
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Another task ('{active_title}') is currently being tracked. Stop it before starting a new timer."
+            # detail=f"Another task ('{active_title}') is currently being tracked. Stop it before starting a new timer."
         )
 
     # Transition PENDING to IN_PROGRESS

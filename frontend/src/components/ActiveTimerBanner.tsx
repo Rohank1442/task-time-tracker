@@ -45,7 +45,7 @@ export const ActiveTimerBanner: React.FC<ActiveTimerBannerProps> = ({ onTimerSto
                 to={`/tasks/${activeTimer.task_id}`}
                 className="text-xs text-blue-200 hover:text-white flex items-center gap-0.5 underline underline-offset-2 transition"
               >
-                Task #{activeTimer.task_id} <ExternalLink className="w-3 h-3" />
+                Task #{activeTimer.task_title} <ExternalLink className="w-3 h-3" />
               </Link>
             </div>
             <h3 className="text-base sm:text-lg font-bold text-white tracking-tight truncate max-w-xs sm:max-w-md">

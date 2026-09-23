@@ -13,7 +13,7 @@ export const TaskDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const id = parseInt(taskId || '0', 10);
 
-  const { activeTimer, elapsedSeconds, startTimer, stopTimer, formatTimerDisplay } = useTimer();
+  const { activeTimer, totalElapsedSeconds, startTimer, stopTimer, formatTimerDisplay } = useTimer();
 
   const [task, setTask] = useState<Task | null>(null);
   const [logs, setLogs] = useState<TimeLog[]>([]);
@@ -49,7 +49,7 @@ export const TaskDetailPage: React.FC = () => {
   const isCurrentActive = activeTimer?.task_id === id;
   const displayTotalSeconds = task
     ? isCurrentActive
-      ? task.total_time_seconds + elapsedSeconds
+      ? totalElapsedSeconds
       : task.total_time_seconds
     : 0;
 
@@ -91,8 +91,15 @@ export const TaskDetailPage: React.FC = () => {
     }
   };
 
+  const parseUtcDate = (isoString: string): Date => {
+    let str = isoString.trim();
+    // Append 'Z' if no timezone info is present (SQLite stores datetimes without 'Z')
+    if (!str.endsWith('Z') && !str.includes('+') && str.lastIndexOf('-') < 11) str += 'Z';
+    return new Date(str);
+  };
+
   const formatDate = (isoString: string) => {
-    return new Date(isoString).toLocaleString('en-US', {
+    return parseUtcDate(isoString).toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -166,7 +173,7 @@ export const TaskDetailPage: React.FC = () => {
                     }`}>
                       {task.status.replace('_', ' ')}
                     </span>
-                    <span className="text-xs text-slate-400 font-mono">ID #{task.id}</span>
+                    {/* <span className="text-xs text-slate-400 font-mono">ID #{task.id}</span> */}
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">

@@ -63,6 +63,14 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [token]);
 
+  // Clear timer state immediately when user logs out (token becomes null)
+  useEffect(() => {
+    if (!token) {
+      setActiveTimer(null);
+      setElapsedSeconds(0);
+    }
+  }, [token]);
+
   useEffect(() => {
     fetchActiveTimer();
   }, [fetchActiveTimer]);

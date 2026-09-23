@@ -19,15 +19,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onDelete,
   onTaskUpdated,
 }) => {
-  const { activeTimer, elapsedSeconds, startTimer, stopTimer, formatTimerDisplay } = useTimer();
+  const { activeTimer, totalElapsedSeconds, startTimer, stopTimer, formatTimerDisplay } = useTimer();
   const [loadingAction, setLoadingAction] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const isCurrentActive = activeTimer?.task_id === task.id;
 
-  // Calculate live total time if this task is currently active
+  // Use totalElapsedSeconds (prior sessions + current session from context) to avoid double-counting
   const displayTotalSeconds = isCurrentActive
-    ? task.total_time_seconds + elapsedSeconds
+    ? totalElapsedSeconds
     : task.total_time_seconds;
 
   const formatHumanDuration = (totalSecs: number): string => {
