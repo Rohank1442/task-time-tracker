@@ -40,14 +40,10 @@ TaskPulse is a production-quality, responsive, and secure full-stack application
 
 ### Backend
 - **Framework**: Python 3.11 with FastAPI & Pydantic V2
-- **Database ORM**: SQLAlchemy (Supports SQLite & PostgreSQL)
+- **Database ORM**: SQLAlchemy (SQLite)
 - **Security**: PyJWT, Passlib with Bcrypt, HTTPBearer
 - **Testing**: Pytest & HTTPX
 - **API Documentation**: OpenAPI / Swagger
-
-### Infrastructure & Deployment
-- **Containerization**: Docker & Docker Compose
-- **Environment**: `.env` configuration
 
 ---
 
@@ -64,8 +60,7 @@ suntek-assignment/
 │   │   ├── services/     # Business logic & time formatting helpers
 │   │   └── main.py       # FastAPI application entrypoint
 │   ├── tests/            # Automated pytest suite (auth, tasks, timer, summary)
-│   ├── requirements.txt
-│   └── Dockerfile
+│   └── requirements.txt
 ├── frontend/
 │   ├── src/
 │   │   ├── components/   # Navbar, ActiveTimerBanner, TaskCard, TaskModal, etc.
@@ -77,10 +72,9 @@ suntek-assignment/
 │   │   └── main.tsx
 │   ├── package.json
 │   ├── tailwind.config.js
-│   ├── vite.config.ts
-│   └── Dockerfile
-├── docker-compose.yml
+│   └── vite.config.ts
 ├── .env.example
+├── .gitignore
 └── README.md
 ```
 
@@ -169,46 +163,29 @@ suntek-assignment/
 
 ## Local Development Setup
 
-### 1. Prerequisites
-- Python 3.11+
-- Node.js v18+ & npm
-- Git
+### 1. Backend Setup
+Open terminal 1 in project root:
+```powershell
+# 1. Activate Python virtual environment
+.\backend\venv\Scripts\Activate.ps1
 
-### 2. Backend Setup
-```bash
-cd backend
-python -m venv venv
-
-# On Windows PowerShell:
-.\venv\Scripts\Activate.ps1
-# On Linux/macOS:
-source venv/bin/activate
-
-pip install -r requirements.txt
-python -m pytest tests # Run unit tests
-uvicorn app.main:app --reload --port 8000
+# 2. Run backend server
+.\backend\venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
 ```
+*(Backend API will run at `http://localhost:8000` and Swagger docs at `http://localhost:8000/docs`)*
 
-### 3. Frontend Setup
-```bash
+### 2. Frontend Setup
+Open terminal 2 in project root:
+```powershell
 cd frontend
-npm install
 npm run dev
 ```
-Open `http://localhost:5173` in your browser.
+*(Frontend UI will run at `http://localhost:5173`)*
 
----
-
-## Docker Compose Setup
-
-To run PostgreSQL, Backend, and Frontend in Docker:
-
-```bash
-docker-compose up --build
+### 3. Run Backend Automated Tests
+```powershell
+$env:PYTHONPATH="backend"; .\backend\venv\Scripts\python -m pytest backend/tests
 ```
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:8000`
-- Swagger Docs: `http://localhost:8000/docs`
 
 ---
 
