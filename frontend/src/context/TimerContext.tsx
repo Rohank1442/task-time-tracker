@@ -16,6 +16,20 @@ interface TimerContextType {
 
 const TimerContext = createContext<TimerContextType | undefined>(undefined);
 
+// Helper function to safely parse ISO timestamps as UTC regardless of trailing 'Z'
+const parseUtcTimestamp = (dateInput: string | Date): number => {
+  if (!dateInput) return Date.now();
+  if (dateInput instanceof Date) return dateInput.getTime();
+
+  let str = String(dateInput).trim();
+  // If no timezone offset (+/-) or Z is provided at the end, append 'Z' to treat as UTC
+  if (!str.endsWith('Z') && !str.includes('+') && str.lastIndexOf('-') < 11) {
+    str += 'Z';
+  }
+  const parsed = new Date(str).getTime();
+  return isNaN(parsed) ? Date.now() : parsed;
+};
+
 export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { token } = useAuth();
   const [activeTimer, setActiveTimer] = useState<ActiveTimer | null>(null);
@@ -34,9 +48,9 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const timer = await timerApi.getActiveTimer();
       setActiveTimer(timer);
       if (timer) {
-        const started = new Date(timer.started_at).getTime();
-        const now = Date.now();
-        const computedElapsed = Math.max(0, Math.floor((now - started) / 1000));
+        const startedMs = parseUtcTimestamp(timer.started_at);
+        const nowMs = Date.now();
+        const computedElapsed = Math.max(0, Math.floor((nowMs - startedMs) / 1000));
         setElapsedSeconds(computedElapsed);
       } else {
         setElapsedSeconds(0);
@@ -58,9 +72,9 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let intervalId: NodeJS.Timeout | null = null;
     if (activeTimer) {
       intervalId = setInterval(() => {
-        const started = new Date(activeTimer.started_at).getTime();
-        const now = Date.now();
-        setElapsedSeconds(Math.max(0, Math.floor((now - started) / 1000)));
+        const startedMs = parseUtcTimestamp(activeTimer.started_at);
+        const nowMs = Date.now();
+        setElapsedSeconds(Math.max(0, Math.floor((nowMs - startedMs) / 1000)));
       }, 1000);
     } else {
       setElapsedSeconds(0);

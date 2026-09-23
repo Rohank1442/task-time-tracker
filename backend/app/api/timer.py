@@ -157,7 +157,7 @@ def get_active_timer(
         task_id=active_log.task_id,
         task_title=task_title,
         user_id=current_user.id,
-        started_at=active_log.started_at,
+        started_at=started,
         elapsed_seconds=elapsed
     )
 

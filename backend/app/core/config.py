@@ -1,5 +1,10 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional
+from typing import Optional, Tuple
+
+# Determine absolute path to root .env file
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+ENV_PATH = os.path.join(ROOT_DIR, ".env")
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Task & Time Tracker API"
@@ -16,7 +21,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(ENV_PATH, ".env", "backend/.env"),
         env_file_encoding="utf-8",
         extra="ignore"
     )
