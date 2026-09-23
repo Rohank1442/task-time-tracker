@@ -19,6 +19,7 @@ app = FastAPI(
 # CORS configuration
 origins = [
     "http://localhost:5173",
+    "https://task-time-tracker-five.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "*"  # Allow all origins for local dev / easy deployment
