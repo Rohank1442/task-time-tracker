@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Square, ExternalLink, AlertCircle } from 'lucide-react';
+import { Square, ExternalLink, AlertCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTimer } from '../context/TimerContext';
 
@@ -8,7 +8,7 @@ interface ActiveTimerBannerProps {
 }
 
 export const ActiveTimerBanner: React.FC<ActiveTimerBannerProps> = ({ onTimerStopped }) => {
-  const { activeTimer, elapsedSeconds, stopTimer, formatTimerDisplay, timerError } = useTimer();
+  const { activeTimer, elapsedSeconds, totalElapsedSeconds, stopTimer, formatTimerDisplay, timerError } = useTimer();
   const [stopping, setStopping] = useState(false);
 
   if (!activeTimer) return null;
@@ -56,14 +56,25 @@ export const ActiveTimerBanner: React.FC<ActiveTimerBannerProps> = ({ onTimerSto
 
         {/* Live Timer Clock & Stop Button */}
         <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-blue-800/60">
-          <div className="font-mono text-2xl sm:text-3xl font-extrabold tracking-wider text-amber-300 bg-black/40 px-4 py-1.5 rounded-xl border border-white/10 shadow-inner">
-            {formatTimerDisplay(elapsedSeconds)}
+          
+          <div className="flex flex-col items-end">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-blue-300 flex items-center gap-1">
+              <Clock className="w-3 h-3 text-amber-300" /> Total Task Time
+            </div>
+            <div className="font-mono text-2xl sm:text-3xl font-extrabold tracking-wider text-amber-300 bg-black/40 px-3.5 py-1 rounded-xl border border-white/10 shadow-inner">
+              {formatTimerDisplay(totalElapsedSeconds)}
+            </div>
+            {activeTimer.prior_total_seconds > 0 && (
+              <div className="text-[10px] text-slate-300 mt-0.5 font-mono">
+                Session: {formatTimerDisplay(elapsedSeconds)}
+              </div>
+            )}
           </div>
 
           <button
             onClick={handleStop}
             disabled={stopping}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition transform active:scale-95"
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition transform active:scale-95 shrink-0"
           >
             <Square className="w-4 h-4 fill-current" />
             <span>{stopping ? 'Stopping...' : 'STOP'}</span>

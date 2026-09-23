@@ -20,6 +20,8 @@ class ActiveTimerResponse(BaseModel):
     user_id: int
     started_at: datetime
     elapsed_seconds: int
+    prior_total_seconds: int = 0
+    total_elapsed_seconds: int = 0
 
 class TaskTimeSummaryResponse(BaseModel):
     task_id: int

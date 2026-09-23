@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 interface TimerContextType {
   activeTimer: ActiveTimer | null;
   elapsedSeconds: number;
+  totalElapsedSeconds: number;
   loadingTimer: boolean;
   timerError: string | null;
   startTimer: (taskId: number) => Promise<void>;
@@ -16,13 +17,12 @@ interface TimerContextType {
 
 const TimerContext = createContext<TimerContextType | undefined>(undefined);
 
-// Helper function to safely parse ISO timestamps as UTC regardless of trailing 'Z'
+// Helper function to safely parse ISO timestamps as UTC
 const parseUtcTimestamp = (dateInput: string | Date): number => {
   if (!dateInput) return Date.now();
   if (dateInput instanceof Date) return dateInput.getTime();
 
   let str = String(dateInput).trim();
-  // If no timezone offset (+/-) or Z is provided at the end, append 'Z' to treat as UTC
   if (!str.endsWith('Z') && !str.includes('+') && str.lastIndexOf('-') < 11) {
     str += 'Z';
   }
@@ -118,11 +118,14 @@ export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
   };
 
+  const totalElapsedSeconds = (activeTimer?.prior_total_seconds || 0) + elapsedSeconds;
+
   return (
     <TimerContext.Provider
       value={{
         activeTimer,
         elapsedSeconds,
+        totalElapsedSeconds,
         loadingTimer,
         timerError,
         startTimer,

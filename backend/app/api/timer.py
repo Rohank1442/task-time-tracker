@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime, timezone
 
@@ -132,7 +133,7 @@ def get_active_timer(
 ):
     """
     Returns the currently active running timer for the authenticated user, if any.
-    Allows frontend to reconstruct timer state across page refreshes and navigations.
+    Includes both current session elapsed seconds and total cumulative task time.
     """
     active_log = db.query(TimeLog).filter(
         TimeLog.user_id == current_user.id,
@@ -152,13 +153,23 @@ def get_active_timer(
     
     elapsed = max(0, int((now - started).total_seconds()))
 
+    # Calculate prior accumulated time for this task from finished sessions
+    prior_total = db.query(func.coalesce(func.sum(TimeLog.duration_seconds), 0))\
+        .filter(TimeLog.task_id == active_log.task_id, TimeLog.ended_at.isnot(None))\
+        .scalar()
+    
+    prior_total_seconds = int(prior_total)
+    total_elapsed = prior_total_seconds + elapsed
+
     return ActiveTimerResponse(
         id=active_log.id,
         task_id=active_log.task_id,
         task_title=task_title,
         user_id=current_user.id,
         started_at=started,
-        elapsed_seconds=elapsed
+        elapsed_seconds=elapsed,
+        prior_total_seconds=prior_total_seconds,
+        total_elapsed_seconds=total_elapsed
     )
 
 @router.get("/time-logs", response_model=List[TimeLogResponse])

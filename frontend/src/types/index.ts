@@ -54,6 +54,8 @@ export interface ActiveTimer {
   user_id: number;
   started_at: string;
   elapsed_seconds: number;
+  prior_total_seconds: number;
+  total_elapsed_seconds: number;
 }
 
 export interface TaskTimeSummary {
